@@ -1,0 +1,8 @@
+.user-image {
+	text-align: center;
+	margin: 0 auto 35px auto;
+}
+
+.user-image label {
+	display: block;
+}
