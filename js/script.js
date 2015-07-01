@@ -148,16 +148,10 @@ function done() {
   // Post image to Couch
   $.ajax({
     method: 'POST',
-    contentType: 'application/json; charset=UTF-8',
-    url: 'https://daltonamitchell.iriscouch.com/pictures',
-    xhrFields: {
-      withCredentials: true
-    },
-    dataType: 'json',
-    jsonp: false,
-    data: JSON.stringify(json)
+    url: 'api/json.php',
+    data: {data: JSON.stringify(json)}
   })
-  .done(function() {
+  .done(function( response ) {
     window.location.replace('gallery.html');
   });
 }
