@@ -10,3 +10,13 @@ $(document).ready(function() {
 		});
 	});
 });
+
+// Trigger loading message while waiting for AJAX to resolve
+var $loading = $('.loading').hide();
+$(document)
+	.ajaxStart(function() {
+		$loading.show();
+	})
+	.ajaxStop(function() {
+		$loading.hide();
+	});
