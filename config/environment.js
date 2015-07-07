@@ -21,7 +21,7 @@ module.exports = function(environment) {
     contentSecurityPolicy: {
       'default-src': "'none'",
       'script-src': "'self' 'unsafe-inline' 'unsafe-eval'",
-      'font-src': "'self' fonts.googleapis.com fonts.gstatic.com",
+      'font-src': "'self' fonts.googleapis.com fonts.gstatic.com maxcdn.bootstrapcdn.com",
       'connect-src': "'self'",
       'img-src': "'self'",
       'report-uri':"'localhost'",
