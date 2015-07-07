@@ -1,0 +1,41 @@
+<div id="artboard">
+	<canvas height="300" width="500" id="canvas" class="shadowed"></canvas>
+
+	<ul class="tools shadowed">
+		<li id="paint" class="icon">
+			<button id="paint-brush"><i class="fa fa-paint-brush"></i></button>
+			<div id="paint-options" class="shadowed">
+				<label>Color</label>
+				<ul id="color-selections">
+					<li id="black" class="color"></li>
+					<li id="blue" class="color"></li>
+					<li id="purple" class="color"></li>
+					<li id="orange" class="color"></li>
+					<li id="red" class="color"></li>
+					<li id="green" class="color"></li>
+					<li id="yellow" class="color"></li>
+				</ul>
+
+				<label>Line Width</label>
+				<ul class="line-weights">
+					<li id="weight-5" class="line-weight" style="height: 5px; width: 5px; border-radius: 5px;"></li>
+					<li id="weight-10" class="line-weight" style="height: 10px; width: 10px; border-radius: 10px;"></li>
+					<li id="weight-15" class="line-weight" style="height: 15px; width: 15px; border-radius: 15px;"></li>
+					<li id="weight-20" class="line-weight" style="height: 20px; width: 20px; border-radius: 20px;"></li>
+					<li id="weight-25" class="line-weight" style="height: 25px; width: 25px; border-radius: 25px;"></li>
+					<li id="weight-35" class="line-weight" style="height: 35px; width: 35px; border-radius: 35px;"></li>
+				</ul>
+			</div>
+		</li>
+		<li id="upload" class="icon">
+			<input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handleFiles(this.files)">
+			<button><i class="fa fa-camera"></i></button>
+		</li>
+		<li id="trash" class="icon">
+			<button><i class="fa fa-trash"></i></button>
+		</li>
+		<li id="done" class="icon">
+			<button><i class="fa fa-check-circle-o"></i></button>
+		</li>
+	</ul>
+</div>
