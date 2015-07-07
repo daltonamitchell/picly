@@ -23,7 +23,7 @@ module.exports = function(environment) {
       'script-src': "'self' 'unsafe-inline' 'unsafe-eval'",
       'font-src': "'self' fonts.googleapis.com fonts.gstatic.com maxcdn.bootstrapcdn.com",
       'connect-src': "'self'",
-      'img-src': "'self'",
+      'img-src': "'self' data:",
       'report-uri':"'localhost'",
       'style-src': "'self' 'unsafe-inline' maxcdn.bootstrapcdn.com fonts.googleapis.com",
       'frame-src': "'none'"
