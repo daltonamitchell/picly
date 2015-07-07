@@ -1,36 +1,5 @@
 import Ember from "ember";
 
-/**
-    touchstart  : 'touchStart',
-    touchmove   : 'touchMove',
-    touchend    : 'touchEnd',
-    touchcancel : 'touchCancel',
-    keydown     : 'keyDown',
-    keyup       : 'keyUp',
-    keypress    : 'keyPress',
-    mousedown   : 'mouseDown',
-    mouseup     : 'mouseUp',
-    contextmenu : 'contextMenu',
-    click       : 'click',
-    dblclick    : 'doubleClick',
-    mousemove   : 'mouseMove',
-    focusin     : 'focusIn',
-    focusout    : 'focusOut',
-    mouseenter  : 'mouseEnter',
-    mouseleave  : 'mouseLeave',
-    submit      : 'submit',
-    input       : 'input',
-    change      : 'change',
-    dragstart   : 'dragStart',
-    drag        : 'drag',
-    dragenter   : 'dragEnter',
-    dragleave   : 'dragLeave',
-    dragover    : 'dragOver',
-    drop        : 'drop',
-    dragend     : 'dragEnd'
-*/
-
-
 export default Ember.Component.extend({
 	actions: {
 		resizeCanvas: function() {
@@ -67,6 +36,82 @@ export default Ember.Component.extend({
 			this.send('addClick', e.offsetX, e.offsetY);
 			this.send('redraw');
 		},
+
+		handleStart: function(e) {
+			e.preventDefault();
+
+			var canvas = this.get('canvas');
+			var context = canvas.getContext("2d");
+			var touches = e.changedTouches;
+			var ongoingTouches = this.get('ongoingTouches');
+
+			for (var i = 0; i < touches.length; i++) {
+				ongoingTouches.push( this._copyTouch(touches[i]) );
+				context.beginPath();
+				context.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);  // a circle at the start
+				context.fillStyle = this.get('STROKESTYLE');
+				context.fill();
+			}
+		},
+		handleEnd: function(e) {
+			e.preventDefault();
+			var canvas = this.get('canvas');
+			var context = canvas.getContext("2d");
+			var touches = e.changedTouches;
+			var ongoingTouches = this.get('ongoingTouches');
+
+			for (var i = 0; i < touches.length; i++) {
+				var index = this._ongoingTouchIndexById(touches[i].identifier);
+
+				if (index >= 0) {
+					context.lineWidth = this.get('LINEWIDTH');
+					context.fillStyle = this.get('STROKESTYLE');
+					context.strokeStyle = this.get('STROKESTYLE');
+					context.lineJoin = this.get('LINEJOIN');
+					context.lineCap = this.get('LINECAP');
+
+					context.beginPath();
+					context.moveTo(ongoingTouches[index].pageX, ongoingTouches[index].pageY);
+					context.lineTo(touches[i].pageX, touches[i].pageY);
+					context.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);  // and a square at the end
+					ongoingTouches.splice(index, 1);  // remove it; we're done
+					context.drawImage(canvas, 0, 0);
+				} else {
+					console.log("can't figure out which touch to end");
+				}
+			}
+		},
+		handleMove: function(e) {
+			e.preventDefault();
+			var canvas = this.get('canvas');
+			var context = canvas.getContext("2d");
+			var touches = e.changedTouches;
+			var ongoingTouches = this.get('ongoingTouches');
+
+			for (var i = 0; i < touches.length; i++) {
+				var index = this._ongoingTouchIndexById(touches[i].identifier);
+
+				if (index >= 0) {
+					context.beginPath();
+					context.moveTo(ongoingTouches[index].pageX, ongoingTouches[index].pageY);
+					context.lineTo(touches[i].pageX, touches[i].pageY);
+					context.lineWidth = this.get('LINEWIDTH');
+					context.strokeStyle = this.get('STROKESTYLE');
+					context.stroke();
+					ongoingTouches.splice(index, 1, this._copyTouch(touches[i]));  // swap in the new touch record
+				} else {
+					console.log("can't figure out which touch to continue");
+				}
+			}
+		},
+		handleCancel: function(e) {
+			e.preventDefault();
+			var touches = e.changedTouches;
+			for (var i = 0; i < touches.length; i++) {
+				this.get('ongoingTouches').splice(i, 1);  // remove it; we're done
+			}
+		},
+
 		addClick: function(x, y, dragging) {
 			this.get('clickX').push(x);
 			this.get('clickY').push(y);
@@ -133,20 +178,20 @@ export default Ember.Component.extend({
 	},
 
 	// Track touch events on canvas
-	touchStart: function() {
-		this.send('handleStart');
+	touchStart: function(e) {
+		this.send('handleStart', e.originalEvent);
 	},
-	touchEnd: function() {
-		this.send('handleEnd');
+	touchMove: function(e) {
+		this.send('handleMove', e.originalEvent);
 	},
-	touchCancel: function() {
-		this.send('handleCancel');
+	touchEnd: function(e) {
+		this.send('handleEnd', e.originalEvent);
 	},
-	touchLeave: function() {
-		this.send('handleEnd');
+	touchCancel: function(e) {
+		this.send('handleCancel', e.originalEvent);
 	},
-	touchMove: function() {
-		this.send('handleMove');
+	touchLeave: function(e) {
+		this.send('handleEnd', e.originalEvent);
 	},
 
 	// Component settings
@@ -191,4 +236,21 @@ export default Ember.Component.extend({
 		// Expand to current screen size to start
 		this.send('resizeCanvas');
 	},
+
+	// Additional functions needed for various calculations
+	_ongoingTouchIndexById: function(idToFind) {
+		var touches = this.get('ongoingTouches');
+		for (var i = 0; i < touches.length; i++) {
+			var id = touches[i].identifier;
+
+			if (id === idToFind) {
+				return i;
+			}
+		}
+		return -1;    // not found
+	},
+	_copyTouch: function(touch) {
+		return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+	},
+
 });
