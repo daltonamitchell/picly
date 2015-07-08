@@ -29,101 +29,42 @@ export default Ember.Component.extend({
 		},
 		handleMouseMove: function(e) {
 			if (this.get('isPainting')) {
-				this.send('addClick', e.offsetX, e.offsetY, true);
+				this.send('addPoint', e.offsetX, e.offsetY, true);
 				this.send('redraw');
 			}
 		},
 		handleMouseDown: function(e) {
 			this.set('isPainting', true);
-			this.send('addClick', e.offsetX, e.offsetY);
+			this.send('addPoint', e.offsetX, e.offsetY, false);
 			this.send('redraw');
 		},
 
-		handleStart: function(e) {
-			e.preventDefault();
-
-			var canvas = this.get('canvas');
-			var context = canvas.getContext("2d");
-			var touches = e.changedTouches;
-			var ongoingTouches = this.get('ongoingTouches');
-
-			for (var i = 0; i < touches.length; i++) {
-				ongoingTouches.push( this._copyTouch(touches[i]) );
-				context.beginPath();
-				context.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);  // a circle at the start
-				context.fillStyle = this.get('STROKESTYLE');
-				context.fill();
-			}
+		handleTouchStart: function(e) {
+			this.set('isPainting', true);
+			this.send('addPoint', e.targetTouches[0].clientX, e.targetTouches[0].clientY, false);
+			this.send('redraw');
 		},
-		handleEnd: function(e) {
-			e.preventDefault();
-			var canvas = this.get('canvas');
-			var context = canvas.getContext("2d");
-			var touches = e.changedTouches;
-			var ongoingTouches = this.get('ongoingTouches');
-
-			for (var i = 0; i < touches.length; i++) {
-				var index = this._ongoingTouchIndexById(touches[i].identifier);
-
-				if (index >= 0) {
-					context.lineWidth = this.get('LINEWIDTH');
-					context.fillStyle = this.get('STROKESTYLE');
-					context.strokeStyle = this.get('STROKESTYLE');
-					context.lineJoin = this.get('LINEJOIN');
-					context.lineCap = this.get('LINECAP');
-
-					context.beginPath();
-					context.moveTo(ongoingTouches[index].pageX, ongoingTouches[index].pageY);
-					context.lineTo(touches[i].pageX, touches[i].pageY);
-					context.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);  // and a square at the end
-					ongoingTouches.splice(index, 1);  // remove it; we're done
-					context.drawImage(canvas, 0, 0);
-				} else {
-					console.log("can't figure out which touch to end");
-				}
-			}
-		},
-		handleMove: function(e) {
-			e.preventDefault();
-			var canvas = this.get('canvas');
-			var context = canvas.getContext("2d");
-			var touches = e.changedTouches;
-			var ongoingTouches = this.get('ongoingTouches');
-
-			for (var i = 0; i < touches.length; i++) {
-				var index = this._ongoingTouchIndexById(touches[i].identifier);
-
-				if (index >= 0) {
-					context.beginPath();
-					context.moveTo(ongoingTouches[index].pageX, ongoingTouches[index].pageY);
-					context.lineTo(touches[i].pageX, touches[i].pageY);
-					context.lineWidth = this.get('LINEWIDTH');
-					context.strokeStyle = this.get('STROKESTYLE');
-					context.stroke();
-					ongoingTouches.splice(index, 1, this._copyTouch(touches[i]));  // swap in the new touch record
-				} else {
-					console.log("can't figure out which touch to continue");
-				}
-			}
-		},
-		handleCancel: function(e) {
-			e.preventDefault();
-			var touches = e.changedTouches;
-			for (var i = 0; i < touches.length; i++) {
-				this.get('ongoingTouches').splice(i, 1);  // remove it; we're done
+		handleTouchMove: function(e) {
+			if (this.get('isPainting')) {
+				this.send('addPoint', e.targetTouches[0].clientX, e.targetTouches[0].clientY, true);
+				this.send('redraw');
 			}
 		},
 
-		addClick: function(x, y, dragging) {
-			this.get('clickX').push(x);
-			this.get('clickY').push(y);
-			this.get('clickDrag').push(dragging);
-			this.get('clickColor').push( this.get('STROKESTYLE') );
-			this.get('clickWeight').push( this.get('LINEWIDTH') );
+		addPoint: function(x, y, dragging) {
+			this.get('points').push({
+				x: x,
+				y: y,
+				dragging: dragging,
+				color: this.get('STROKESTYLE'),
+				weight: this.get('LINEWIDTH')
+			});
 		},
 		redraw: function() {
 			var canvas = this.get('canvas');
 			var context = canvas.getContext("2d");
+
+			context.clearRect(0, 0, canvas.width, canvas.height);
 
 			// Create a temp copy
 			var tempCanvas = $(document.createElement('canvas'))[0];
@@ -132,24 +73,20 @@ export default Ember.Component.extend({
 			var tempContext = tempCanvas.getContext('2d');
 
 			// Get click values
-			var clickX = this.get('clickX');
-			var clickY = this.get('clickY');
-			var clickDrag = this.get('clickDrag');
-			var clickColor = this.get('clickColor');
-			var clickWeight = this.get('clickWeight');
+			var points = this.get('points');
 
 			// Loop through clicks and redraw lines
-			for (var i=0; i < clickX.length; i++) {		
+			for (var i=0; i < points.length; i++) {		
 				tempContext.beginPath();
-				if (clickDrag[i] && i) {
-					tempContext.moveTo(clickX[i-1], clickY[i-1]);
+				if (points[i].dragging && i) {
+					tempContext.moveTo(points[i-1].x, points[i-1].y);
 				} else {
-					tempContext.moveTo(clickX[i]-1, clickY[i]);
+					tempContext.moveTo(points[i].x, points[i].y);
 				}
-				tempContext.lineTo(clickX[i], clickY[i]);
+				tempContext.lineTo(points[i].x, points[i].y);
 				tempContext.closePath();
-				tempContext.strokeStyle = clickColor[i];
-				tempContext.lineWidth = clickWeight[i];
+				tempContext.strokeStyle = points[i].color;
+				tempContext.lineWidth = points[i].weight;
 				tempContext.stroke();
 			}
 
@@ -202,12 +139,7 @@ export default Ember.Component.extend({
 			this.set('image', null);
 
 			// Clear all stored drawing data
-			this.set('clickX', []);
-			this.set('clickY', []);
-			this.set('clickDrag', []);
-			this.set('clickColor', []);
-			this.set('clickWeight', []);
-			this.set('ongoingTouches', []);
+			this.set('points', []);
 		},
 
 		// Set a new stroke weight
@@ -237,19 +169,19 @@ export default Ember.Component.extend({
 
 	// Track touch events on canvas
 	touchStart: function(e) {
-		this.send('handleStart', e.originalEvent);
+		this.send('handleTouchStart', e.originalEvent);
 	},
 	touchMove: function(e) {
-		this.send('handleMove', e.originalEvent);
+		this.send('handleTouchMove', e.originalEvent);
 	},
-	touchEnd: function(e) {
-		this.send('handleEnd', e.originalEvent);
+	touchEnd: function() {
+		this.send('stopPainting');
 	},
-	touchCancel: function(e) {
-		this.send('handleCancel', e.originalEvent);
+	touchCancel: function() {
+		this.send('stopPainting');
 	},
-	touchLeave: function(e) {
-		this.send('handleEnd', e.originalEvent);
+	touchLeave: function() {
+		this.send('stopPainting');
 	},
 
 	// Component settings
@@ -259,20 +191,17 @@ export default Ember.Component.extend({
 	attributeBindings: ['width', 'height'],
 	classNames: ['shadowed'],
 
-	// Setup Canvas
-	clickX: [],
-	clickY: [],
-	clickDrag: [],
-	clickColor: [],
-	clickWeight: [],
-	isPainting: false,
-	ongoingTouches: [],
-
 	// Setup drawing properties
+	points: [],
+	isPainting: false,
 	STROKESTYLE: '#333',
 	LINEJOIN: 'round',
 	LINECAP: 'round',
 	LINEWIDTH: 10,
+
+	pointsChanged: function() {
+		console.log( this.get('points') );
+	}.observes('points'),
 
 	// Bind canvas
 	canvas: Ember.computed.alias('element'),
@@ -295,22 +224,5 @@ export default Ember.Component.extend({
 
 		// Expand to current screen size to start
 		this.send('resizeCanvas');
-	},
-
-	// Additional functions needed for various calculations
-	_ongoingTouchIndexById: function(idToFind) {
-		var touches = this.get('ongoingTouches');
-		for (var i = 0; i < touches.length; i++) {
-			var id = touches[i].identifier;
-
-			if (id === idToFind) {
-				return i;
-			}
-		}
-		return -1;    // not found
-	},
-
-	_copyTouch: function(touch) {
-		return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
 	},
 });

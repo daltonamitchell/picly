@@ -38,9 +38,6 @@ export default Ember.Component.extend({
 	isPainting: Ember.computed.alias('objectController.canvas.isPainting'),
 	paintOptionsAreVisible: false,
 	hasBegunPainting: function() {
-		console.log('Painting? ' + this.get('isPainting') );
-		console.log('Options open? ' + this.get('paintOptionsAreVisible') );
-
 		if ( this.get('isPainting') && this.get('paintOptionsAreVisible') ) {
 			this.send('togglePaintOptions');
 		}
