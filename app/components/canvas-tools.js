@@ -29,19 +29,22 @@ export default Ember.Component.extend({
 
 		// Toggles display of the paint options menu
 		togglePaintOptions: function() {
-			if ( $('#paint-options').is(':visible') ) {
-				$('#paint-options').css({
-					'display': 'none',
-					'right': '0'
-				});
-			} else {
-				$('#paint-options').css({
-					'display': 'block',
-					'right': '60px'
-				});
-			}
+			var currentVisibility = this.get('paintOptionsAreVisible');
+			this.set('paintOptionsAreVisible', !currentVisibility);
 		}
 	},
+
+	// Close paint options while painting
+	isPainting: Ember.computed.alias('objectController.canvas.isPainting'),
+	paintOptionsAreVisible: false,
+	hasBegunPainting: function() {
+		console.log('Painting? ' + this.get('isPainting') );
+		console.log('Options open? ' + this.get('paintOptionsAreVisible') );
+
+		if ( this.get('isPainting') && this.get('paintOptionsAreVisible') ) {
+			this.send('togglePaintOptions');
+		}
+	}.observes('isPainting'),
 
 	tagName: 'ul',
 	classNames: ['tools', 'shadowed'],

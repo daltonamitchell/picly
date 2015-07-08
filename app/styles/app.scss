@@ -122,6 +122,7 @@ nav a {
 	width: 205px;
 	padding: 15px;
 	display: none;
+	right: 0;
 	-webkit-transition: all 10000ms cubic-bezier(0.075, 0.820, 0.165, 1.000); 
 	   -moz-transition: all 10000ms cubic-bezier(0.075, 0.820, 0.165, 1.000); 
 	     -o-transition: all 10000ms cubic-bezier(0.075, 0.820, 0.165, 1.000); 
@@ -131,6 +132,11 @@ nav a {
 	   -moz-transition-timing-function: cubic-bezier(0.075, 0.820, 0.165, 1.000); 
 	     -o-transition-timing-function: cubic-bezier(0.075, 0.820, 0.165, 1.000); 
 	        transition-timing-function: cubic-bezier(0.075, 0.820, 0.165, 1.000); /* easeOutCirc */
+}
+
+#paint-options.visible {
+	display: block;
+	right: 60px;
 }
 
 #paint-options:after {
