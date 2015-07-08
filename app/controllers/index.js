@@ -6,8 +6,7 @@ export default Ember.Controller.extend({
 		done: function() {
 			// Get the current canvas
 			var canvas = $("canvas")[0];
-			var context = canvas.getContext('2d');
-
+	
 			// Get a username
 			var name = prompt('What\'s your name?');
 
@@ -18,7 +17,7 @@ export default Ember.Controller.extend({
 			var json = {
 				image: image,
 				name: name
-			}
+			};
 
 			// Post image to Couch
 			$.ajax({
@@ -26,7 +25,7 @@ export default Ember.Controller.extend({
 				url: 'api/json.php',
 				data: {data: JSON.stringify(json)}
 			})
-			.done(function( response ) {
+			.done(function() {
 				window.location.replace('gallery.html');
 			});
 		},

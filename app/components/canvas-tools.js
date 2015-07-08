@@ -18,7 +18,7 @@ export default Ember.Component.extend({
 			}
 
 			var reader = new FileReader();
-			reader.onloadend = function(event) {
+			reader.onloadend = function() {
 				var image = new Image();
 				image.src = reader.result;
 				image.onload = self.get('objectController').get('canvas').send('saveImage', image); // Save the image so it can be used later
@@ -53,6 +53,10 @@ export default Ember.Component.extend({
 		$('#file-input').change(function(e) {
 			e.preventDefault();
 			self.send('handleFiles', e.target.files);
+
+			// Clear input 'change' will actually fire on the next upload
+			$('#file-input').wrap('<form>').closest('form').get(0).reset();
+			$('#file-input').unwrap();
 		});
 
 		// Change color when appropriate square is clicked
@@ -88,7 +92,9 @@ export default Ember.Component.extend({
 		$('#trash').click(function(e) {
 			e.preventDefault();
 			var go = confirm('Are you sure you want to clear the canvas?');
-			if (go) self.get('objectController').get('canvas').send('clearCanvas');
+			if (go) {
+				self.get('objectController').get('canvas').send('clearCanvas');
+			}
 		});
 
 		// You're done!
