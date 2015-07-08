@@ -25,7 +25,7 @@ export default Ember.Component.extend({
 			tempContext = null;
 			tempCanvas.remove();
 
-			this.send('drawImage');
+			this.send('redraw');
 		},
 		handleMouseMove: function(e) {
 			if (this.get('isPainting')) {
@@ -64,7 +64,13 @@ export default Ember.Component.extend({
 			var canvas = this.get('canvas');
 			var context = canvas.getContext("2d");
 
+			// First clear the canvas
 			context.clearRect(0, 0, canvas.width, canvas.height);
+
+			// Add the image if there is one
+			if ( this.get('image') ) {
+				this.send('drawImage');
+			}
 
 			// Create a temp copy
 			var tempCanvas = $(document.createElement('canvas'))[0];
@@ -104,7 +110,7 @@ export default Ember.Component.extend({
 		// Save the image object to be drawn on the canvas
 		saveImage: function(image) {
 			this.set('image', image);
-			this.send('drawImage');
+			this.send('redraw');
 		},
 
 		// Draw the image on the canvas
@@ -123,8 +129,6 @@ export default Ember.Component.extend({
 
 				tempContext = null;
 				tempCanvas.remove();
-
-				this.send('redraw');
 			}
 		},
 
@@ -198,10 +202,6 @@ export default Ember.Component.extend({
 	LINEJOIN: 'round',
 	LINECAP: 'round',
 	LINEWIDTH: 10,
-
-	pointsChanged: function() {
-		console.log( this.get('points') );
-	}.observes('points'),
 
 	// Bind canvas
 	canvas: Ember.computed.alias('element'),
