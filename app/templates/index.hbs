@@ -1,5 +1,9 @@
 <div id="artboard">
-	{{drawing-canvas}}
+	{{drawing-canvas
+		registered-as=canvas
+		objectController=this}}
 
-	{{canvas-tools}}
+	{{canvas-tools
+		registered-as=canvasTools
+		objectController=this}}
 </div>

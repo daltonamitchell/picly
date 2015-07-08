@@ -24,6 +24,8 @@ export default Ember.Component.extend({
 			// Cleanup temp items
 			tempContext = null;
 			tempCanvas.remove();
+
+			this.send('drawImage');
 		},
 		handleMouseMove: function(e) {
 			if (this.get('isPainting')) {
@@ -137,7 +139,7 @@ export default Ember.Component.extend({
 			var clickWeight = this.get('clickWeight');
 
 			// Loop through clicks and redraw lines
-			for(var i=0; i < clickX.length; i++) {		
+			for (var i=0; i < clickX.length; i++) {		
 				tempContext.beginPath();
 				if (clickDrag[i] && i) {
 					tempContext.moveTo(clickX[i-1], clickY[i-1]);
@@ -160,7 +162,63 @@ export default Ember.Component.extend({
 		},
 		stopPainting: function() {
 			this.set('isPainting', false);
-		}
+		},
+
+		// Save the image object to be drawn on the canvas
+		saveImage: function(image) {
+			this.set('image', image);
+			this.send('drawImage');
+		},
+
+		// Draw the image on the canvas
+		drawImage: function() {
+			if ( this.get('image') ) {
+				var image = this.get('image');
+				var canvas = this.get('canvas');
+				var context = canvas.getContext("2d");
+				var tempCanvas = $(document.createElement('canvas'))[0];
+				var tempContext = tempCanvas.getContext('2d');
+				tempCanvas.width = canvas.width;
+				tempCanvas.height = canvas.height;
+
+				tempContext.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
+				context.drawImage(tempCanvas, 0, 0);
+
+				tempContext = null;
+				tempCanvas.remove();
+
+				this.send('redraw');
+			}
+		},
+
+		clearCanvas: function() {
+			var canvas = this.get('canvas');
+			var context = canvas.getContext('2d');
+
+			// Clear the canvas surface
+			context.clearRect(0, 0, canvas.width, canvas.height);
+
+			// Clear the image
+			this.set('image', null);
+
+			// Clear all stored drawing data
+			this.set('clickX', []);
+			this.set('clickY', []);
+			this.set('clickDrag', []);
+			this.set('clickColor', []);
+			this.set('clickWeight', []);
+			this.set('ongoingTouches', []);
+		},
+
+		// Set a new stroke weight
+		changeStrokeWeight: function(value) {
+			this.set('LINEWIDTH', value);
+		},
+
+		// Change the stroke color
+		changeColor: function(color) {
+			this.set('STROKESTYLE', color);
+		},
 	},
 
 	// Track mouse movement on canvas
@@ -202,7 +260,6 @@ export default Ember.Component.extend({
 	classNames: ['shadowed'],
 
 	// Setup Canvas
-	canvasWidth: 500,
 	clickX: [],
 	clickY: [],
 	clickDrag: [],
@@ -222,6 +279,9 @@ export default Ember.Component.extend({
 
 	didInsertElement: function() {
 		var self = this;
+
+		// Register this component so it can interact with the controller and canvas
+		this.set('registered-as', this);
 
 		// Make sure canvas resizes with window resize
 		$(window).resize(function() {
@@ -249,8 +309,8 @@ export default Ember.Component.extend({
 		}
 		return -1;    // not found
 	},
+
 	_copyTouch: function(touch) {
 		return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
 	},
-
 });
