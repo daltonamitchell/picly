@@ -14,5 +14,8 @@
     "qunit": "~1.17.1",
     "normalize.css": "~3.0.3",
     "jquery-mobile": "~1.4.5"
+  },
+  "resolutions": {
+    "jquery": "1.11.3"
   }
 }
